@@ -429,18 +429,19 @@ var redisCleanWorkerPoolsScript = redis.NewScript(3, `
 local keyWorkerPools = KEYS[1]
 local keyJobsLockInfo = KEYS[2]
 local keyJobsLock = KEYS[3]
-local idPool
+local idPool, lockInfo
 local lockCount = 0
 
 local idWorkerPools = redis.call('smembers', keyWorkerPools)
-if idWorkerPools == nil then
-  return nil
 
 for i=1,#idWorkerPools do
   idPool = idWorkerPools[i]
-  lockCount = lockCount + tonumber(redis.call('hget', keyJobsLockInfo, idPool))
+  lockInfo = redis.call('hget', keyJobsLockInfo, idPool)
+  if lockInfo != nil then
+    lockCount = lockCount + tonumber(lockInfo)
+  end
 end
 
 redis.call('set', keyJobsLock, lockCount)
-return lockCount
+return nil
 `)

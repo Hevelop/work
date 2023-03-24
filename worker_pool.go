@@ -187,19 +187,18 @@ func (wp *WorkerPool) Start() {
 
 	// TODO: we should cleanup stale keys on startup from previously registered jobs
 	conn := wp.pool.Get()
-	defer conn.Close()
-
 	for jd := range wp.jobTypes {
 		var scriptArgs = []interface{}{
 			redisKeyWorkerPools(wp.namespace),
 			redisKeyJobsLockInfo(wp.namespace, jd),
 			redisKeyJobsLock(wp.namespace, jd),
 		}
-		_, err := redis.StringMap(redisCleanWorkerPoolsScript.Do(conn, scriptArgs...))
+		_, err := redisCleanWorkerPoolsScript.Do(conn, scriptArgs...)
 		if err != nil {
 			fmt.Printf("WARN: redisCleanWorkerPoolsScript in error for %s - %s\n", jd, err.Error())
 		}
 	}
+	conn.Close()
 
 	wp.writeConcurrencyControlsToRedis()
 	go wp.writeKnownJobsToRedis()
