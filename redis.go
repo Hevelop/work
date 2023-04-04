@@ -437,7 +437,7 @@ local idWorkerPools = redis.call('smembers', keyWorkerPools)
 for i=1,#idWorkerPools do
   idPool = idWorkerPools[i]
   lockInfo = redis.call('hget', keyJobsLockInfo, idPool)
-  if lockInfo != nil then
+  if not lockInfo == nil then
     lockCount = lockCount + tonumber(lockInfo)
   end
 end
